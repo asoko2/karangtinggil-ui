@@ -1,6 +1,6 @@
 <template>
     <v-col cols="12" class="d-flex flex-column align-center justify-space-between">
-        <h1>Daftar Permohonan Kehilangan KK</h1>
+        <h1>Daftar Permohonan Surat Kehilangan KK</h1>
         <v-col cols="6">
             <v-card class="mb-2">
                 <v-card-text>
@@ -8,29 +8,31 @@
                         <template v-slot:default>
                             <tbody>
                                 <tr>
-                                    <td>Urut Berdasarkan</td>
+                                    <td>Pilih Berdasarkan</td>
                                     <td>:</td>
                                     <td>
-                                        <v-select solo></v-select>
+                                        <v-select @change="gantiSort($event)" :items="items" item-text="text"
+                                            item-value="value" v-model="pilih" label="Pilih Berdasarkan" solo>
+                                        </v-select>
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr v-if="pilih == 1">
                                     <td>Tanggal</td>
                                     <td>:</td>
                                     <td>
                                         <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40"
                                             transition="scale-transition" offset-y min-width="auto">
                                             <template v-slot:activator="{ on, attrs }">
-                                                <v-text-field v-model="tanggal_lahir" label="Tanggal Lahir"
+                                                <v-text-field v-model="tanggal" label="Tanggal"
                                                     prepend-icon="mdi-calendar" readonly v-bind="attrs" v-on="on" solo>
                                                 </v-text-field>
                                             </template>
-                                            <v-date-picker v-model="tanggal_lahir" @input="menu = false">
+                                            <v-date-picker v-model="tanggal" @input="menu = false">
                                             </v-date-picker>
                                         </v-menu>
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr v-else-if="pilih == 2">
                                     <td>Bulan</td>
                                     <td>:</td>
                                     <td>
@@ -38,7 +40,7 @@
                                             solo label="Bulan"></v-select>
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr v-else-if="pilih == 3">
                                     <td>Tahun</td>
                                     <td>:</td>
                                     <td class="">
@@ -51,8 +53,8 @@
                     </v-simple-table>
                 </v-card-text>
             </v-card>
-            <v-btn color="primary">Tampilkan</v-btn>
-            <v-btn color="secondary">Reset</v-btn>
+            <v-btn color="primary" @click="filterSurat">Tampilkan</v-btn>
+            <v-btn color="secondary" @click="reset">Reset</v-btn>
         </v-col>
         <v-spacer></v-spacer>
         <v-col cols="10" class="d-flex justify-end">
@@ -65,7 +67,7 @@
             <v-card>
                 <v-card-text>
                     <v-col cols="12">
-                        <v-data-table :headers="headers" :items="kehilangan_kks" disable-pagination
+                        <v-data-table :headers="headers" :items="kehilanganKks" disable-pagination
                             :options.sync="options" :server-items-length="totalKehilanganKKs" :loading="loading"
                             class="elevation-1 mb-2" :hide-default-footer="true">
                         </v-data-table>
@@ -110,12 +112,26 @@ export default {
     data() {
         return {
             filename: '',
+            items: [
+                {
+                    value: 1,
+                    text: "Per Tanggal"
+                },
+                {
+                    value: 2,
+                    text: "Per Bulan"
+                },
+                {
+                    value: 3,
+                    text: "Per Tahun"
+                },
+            ],
             json_fields: {
                 No: 'no',
                 'Tanggal': 'tanggal',
                 'NIK': 'nik',
                 'Nama': 'nama',
-                'Keterangan': 'keterangan',
+                'Keperluan': 'keperluan',
                 'Status': 'status'
             },
             json_data: [],
@@ -128,7 +144,7 @@ export default {
                 ],
             ],
             totalKehilanganKKs: 0,
-            kehilangan_kks: [],
+            kehilanganKks: [],
             loading: true,
             options: {},
             search: '',
@@ -142,14 +158,13 @@ export default {
                 { text: 'Tanggal', value: 'tanggal' },
                 { text: 'NIK', value: 'nik' },
                 { text: 'Nama Lengkap', value: 'nama' },
-                { text: 'Keterangan', value: 'keterangan' },
                 { text: 'Status', value: 'status' },
             ],
             pageSize: 5,
             pageSizes: [5, 10, 20, 50, 100],
             page: 1,
             totalPages: 0,
-            tanggal_lahir: '',
+            tanggal: '',
             months: [
                 { text: 'Januari', value: 1 },
                 { text: 'Februari', value: 2 },
@@ -165,16 +180,18 @@ export default {
                 { text: 'Desember', value: 12 },
             ],
             years: [],
-            bulan: '',
-            tahun: '',
+            bulan: 0,
+            tahun: 0,
             jenis_kelamin: ['Laki-laki', 'Perempuan'],
             menu: false,
+            pilih: 0,
+            filterType: 0,
+            filter: '',
         }
     },
     watch: {
         options: {
             handler() {
-                // this.getDataFromApi()
                 this.getKehilanganKKData()
             },
             deep: true,
@@ -186,6 +203,9 @@ export default {
         }
     },
     methods: {
+        gantiSort(evt) {
+            this.pilih = evt
+        },
         generateFileName() {
             this.filename = `${DateTime.now().toISODate()}_KehilanganKK.xls`
         },
@@ -216,7 +236,9 @@ export default {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,
-                    search: this.search
+                    search: this.search,
+                    filter: this.filter,
+                    filterType: this.filterType
                 }
             }).then(res => {
                 this.getDisplayKehilanganKK(res)
@@ -226,30 +248,29 @@ export default {
             })
         },
         getDisplayKehilanganKK(data) {
-            this.json_data = data.data.map((kehilangan_kk, i) => {
+            this.json_data = data.data.map((kehilanganKk, i) => {
                 let no = (data.meta.current_page - 1) * data.meta.per_page + 1 + i
-                const tgl = DateTime.fromISO(kehilangan_kk.created_at).toFormat('yyyy-LL-dd')
-                const status = (kehilangan_kk.status == 1) ? 'Disetujui' : (kehilangan_kk.status == 2) ? 'Surat Belum diambil' : (kehilangan_kk.status == 3) ? 'Surat diambil' : 'Belum Diproses'
+                const tgl = DateTime.fromISO(kehilanganKk.created_at).toFormat('yyyy-LL-dd')
+                const status = (kehilanganKk.status == 1) ? 'Disetujui' : (kehilanganKk.status == 2) ? 'Surat Belum diambil' : (kehilanganKk.status == 3) ? 'Surat diambil' : 'Belum Diproses'
                 return {
                     no: no,
                     tanggal: tgl,
-                    nik: kehilangan_kk.nik,
-                    nama: kehilangan_kk.nama,
-                    keterangan: kehilangan_kk.keterangan,
+                    nik: kehilanganKk.nik,
+                    nama: kehilanganKk.nama,
+                    keperluan: kehilanganKk.keperluan,
                     status: status,
                 };
             })
-            this.kehilangan_kks = data.data.map((kehilangan_kk, i) => {
+            this.kehilanganKks = data.data.map((kehilanganKk, i) => {
                 let no = (data.meta.current_page - 1) * data.meta.per_page + 1 + i
-                const tgl = DateTime.fromISO(kehilangan_kk.created_at).toFormat('yyyy-LL-dd')
-                const status = (kehilangan_kk.status == 1) ? 'Disetujui' : (kehilangan_kk.status == 2) ? 'Surat Belum diambil' : (kehilangan_kk.status == 3) ? 'Surat diambil' : 'Belum Diproses'
+                const tgl = DateTime.fromISO(kehilanganKk.created_at).toFormat('yyyy-LL-dd')
+                const status = (kehilanganKk.status == 1) ? 'Disetujui' : (kehilanganKk.status == 2) ? 'Surat Belum diambil' : (kehilanganKk.status == 3) ? 'Surat diambil' : 'Belum Diproses'
                 return {
                     no: no,
-                    id: kehilangan_kk.id,
-                    nama: kehilangan_kk.nama,
+                    id: kehilanganKk.id,
+                    nama: kehilanganKk.nama,
                     status: status,
-                    keterangan: kehilangan_kk.keterangan,
-                    nik: kehilangan_kk.nik,
+                    nik: kehilanganKk.nik,
                     tanggal: tgl
                 };
             })
@@ -263,42 +284,42 @@ export default {
             this.page = 1;
             this.getKehilanganKKData();
         },
-        hapus(val) {
-            const kehilangan_kk = val
-            this.$swal.fire({
-                title: 'Peringatan?',
-                text: "Apakah anda yakin untuk hapus data " + kehilangan_kk.nama,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#459EED',
-                cancelButtonColor: '#d33',
-                showLoaderOnConfirm: true,
-                confirmButtonText: 'Yes, delete it!',
-                preConfirm: (hapus) => {
-                    return this.$axios.$delete(`http://localhost:3333/kehilangan-kk/${kehilangan_kk.id}`)
-                        .then(res => {
-                            console.log(res)
-                        })
-                        .catch(err => {
-                            this.$swal.fire('Gagal!', 'Gagal hapus data' + kehilangan_kk.nama, 'error')
-                            this.$swal.hideLoading()
-                        })
-                },
-            }).then((result) => {
-                this.$swal.showLoading()
-                if (result.isConfirmed) {
-                    this.$swal.fire(
-                        'Sukses!',
-                        'Berhasil hapus data ' + kehilangan_kk.nama,
-                        'success'
-                    )
-                    this.getKehilanganKKData()
-                }
-            })
-        },
         cetak() {
             console.log(this.filename)
-        }
+        },
+        filterSurat() {
+            switch (this.pilih) {
+                case 1:
+                    this.filter = this.tanggal
+                    this.filterType = this.pilih
+                    this.page = 1
+                    this.getKehilanganKKData()
+                    break
+                case 2:
+                    this.filter = this.bulan
+                    this.filterType = this.pilih
+                    this.page = 1
+                    this.getKehilanganKKData()
+                    break
+                case 3:
+                    this.filter = this.tahun
+                    this.filterType = this.pilih
+                    this.page = 1
+                    this.getKehilanganKKData()
+                    break
+                default:
+                    break
+            }
+        },
+        reset() {
+            this.filter = ''
+            this.pilih = 0
+            this.filterType = 0
+            this.tanggal = ''
+            this.bulan = 0
+            this.tahun = 0
+            this.getKehilanganKKData()
+        },
     },
 
 }

@@ -8,14 +8,16 @@
                         <template v-slot:default>
                             <tbody>
                                 <tr>
-                                    <td>Urut Berdasarkan</td>
+                                    <td>Pilih Berdasarkan</td>
                                     <td>:</td>
                                     <td>
-                                        <v-select solo></v-select>
+                                        <v-select @change="gantiSort($event)" :items="items" item-text="text"
+                                            item-value="value" v-model="pilih" label="Pilih Berdasarkan" solo>
+                                        </v-select>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td>Tanggal</td>
+                                <tr v-if="pilih == 1">
+                                    <td>Tanggal Lahir</td>
                                     <td>:</td>
                                     <td>
                                         <v-menu v-model="menu" :close-on-content-click="false" :nudge-right="40"
@@ -30,7 +32,7 @@
                                         </v-menu>
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr v-else-if="pilih == 2">
                                     <td>Bulan</td>
                                     <td>:</td>
                                     <td>
@@ -38,7 +40,7 @@
                                             solo label="Bulan"></v-select>
                                     </td>
                                 </tr>
-                                <tr>
+                                <tr v-else-if="pilih == 3">
                                     <td>Tahun</td>
                                     <td>:</td>
                                     <td class="">
@@ -51,8 +53,8 @@
                     </v-simple-table>
                 </v-card-text>
             </v-card>
-            <v-btn color="primary">Tampilkan</v-btn>
-            <v-btn color="secondary">Reset</v-btn>
+            <v-btn color="primary" @click="filterSurat">Tampilkan</v-btn>
+            <v-btn color="secondary" @click="reset">Reset</v-btn>
         </v-col>
         <v-spacer></v-spacer>
         <v-col cols="10" class="d-flex justify-end">
@@ -110,9 +112,23 @@ export default {
     data() {
         return {
             filename: '',
+            items: [
+                {
+                    value: 1,
+                    text: "Per Tanggal"
+                },
+                {
+                    value: 2,
+                    text: "Per Bulan"
+                },
+                {
+                    value: 3,
+                    text: "Per Tahun"
+                },
+            ],
             json_fields: {
                 No: 'no',
-                'Tanggal': 'tanggal',
+                'Tanggal Lahir': 'tanggal_lahir',
                 'NIK': 'nik',
                 'Nama': 'nama',
             },
@@ -137,9 +153,9 @@ export default {
                     sortable: false,
                     value: 'no',
                 },
-                { text: 'Tanggal', value: 'tanggal' },
                 { text: 'NIK', value: 'nik' },
                 { text: 'Nama Lengkap', value: 'nama' },
+                { text: 'Tanggal Lahir', value: 'tanggal_lahir' },
             ],
             pageSize: 5,
             pageSizes: [5, 10, 20, 50, 100],
@@ -161,16 +177,18 @@ export default {
                 { text: 'Desember', value: 12 },
             ],
             years: [],
-            bulan: '',
-            tahun: '',
+            bulan: 0,
+            tahun: 0,
             jenis_kelamin: ['Laki-laki', 'Perempuan'],
             menu: false,
+            pilih: 0,
+            filterType: 0,
+            filter: '',
         }
     },
     watch: {
         options: {
             handler() {
-                // this.getDataFromApi()
                 this.getPemohonData()
             },
             deep: true,
@@ -182,6 +200,9 @@ export default {
         }
     },
     methods: {
+        gantiSort(evt) {
+            this.pilih = evt
+        },
         generateFileName() {
             this.filename = `${DateTime.now().toISODate()}_Pemohon.xls`
         },
@@ -212,7 +233,9 @@ export default {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,
-                    search: this.search
+                    search: this.search,
+                    filter: this.filter,
+                    filterType: this.filterType
                 }
             }).then(res => {
                 this.getDisplayPemohon(res)
@@ -224,24 +247,24 @@ export default {
         getDisplayPemohon(data) {
             this.json_data = data.data.map((pemohon, i) => {
                 let no = (data.meta.current_page - 1) * data.meta.per_page + 1 + i
-                const tgl = DateTime.fromISO(pemohon.created_at).toFormat('yyyy-LL-dd')
+                const tgl = DateTime.fromISO(pemohon.tanggal_lahir).toFormat('yyyy-LL-dd')
                 return {
                     no: no,
-                    tanggal: tgl,
+                    tanggal_lahir: tgl,
                     nik: pemohon.nik,
                     nama: pemohon.nama,
                 };
             })
             this.pemohons = data.data.map((pemohon, i) => {
                 let no = (data.meta.current_page - 1) * data.meta.per_page + 1 + i
-                const tgl = DateTime.fromISO(pemohon.created_at).toFormat('yyyy-LL-dd')
+                const tgl = (pemohon.tanggal_lahir == null) ? '' : DateTime.fromISO(pemohon.tanggal_lahir).toFormat('yyyy-LL-dd')
                 const status = (pemohon.status == 1) ? 'Disetujui' : (pemohon.status == 2) ? 'Surat Belum diambil' : (pemohon.status == 3) ? 'Surat diambil' : 'Belum Diproses'
                 return {
                     no: no,
                     id: pemohon.id,
                     nama: pemohon.nama,
                     nik: pemohon.nik,
-                    tanggal: tgl
+                    tanggal_lahir: tgl
                 };
             })
         },
@@ -254,42 +277,42 @@ export default {
             this.page = 1;
             this.getPemohonData();
         },
-        hapus(val) {
-            const pemohon = val
-            this.$swal.fire({
-                title: 'Peringatan?',
-                text: "Apakah anda yakin untuk hapus data " + pemohon.nama,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#459EED',
-                cancelButtonColor: '#d33',
-                showLoaderOnConfirm: true,
-                confirmButtonText: 'Yes, delete it!',
-                preConfirm: (hapus) => {
-                    return this.$axios.$delete(`http://localhost:3333/pemohon/${pemohon.id}`)
-                        .then(res => {
-                            console.log(res)
-                        })
-                        .catch(err => {
-                            this.$swal.fire('Gagal!', 'Gagal hapus data' + pemohon.nama, 'error')
-                            this.$swal.hideLoading()
-                        })
-                },
-            }).then((result) => {
-                this.$swal.showLoading()
-                if (result.isConfirmed) {
-                    this.$swal.fire(
-                        'Sukses!',
-                        'Berhasil hapus data ' + pemohon.nama,
-                        'success'
-                    )
-                    this.getPemohonData()
-                }
-            })
-        },
         cetak() {
             console.log(this.filename)
-        }
+        },
+        filterSurat() {
+            switch (this.pilih) {
+                case 1:
+                    this.filter = this.tanggal_lahir
+                    this.filterType = this.pilih
+                    this.page = 1
+                    this.getPemohonData()
+                    break
+                case 2:
+                    this.filter = this.bulan
+                    this.filterType = this.pilih
+                    this.page = 1
+                    this.getPemohonData()
+                    break
+                case 3:
+                    this.filter = this.tahun
+                    this.filterType = this.pilih
+                    this.page = 1
+                    this.getPemohonData()
+                    break
+                default:
+                    break
+            }
+        },
+        reset() {
+            this.filter = ''
+            this.pilih = 0
+            this.filterType = 0
+            this.tanggal_lahir = ''
+            this.bulan = 0
+            this.tahun = 0
+            this.getPemohonData()
+        },
     },
 
 }

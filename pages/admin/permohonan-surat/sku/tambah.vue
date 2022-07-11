@@ -153,7 +153,7 @@ export default {
         }
     },
     async fetch() {
-        this.$axios.$get('http://localhost:3333/pemohon/all')
+        this.$axios.$get('/pemohon/all')
             .then(res => {
                 this.pemohons = res
             })
@@ -162,7 +162,7 @@ export default {
     },
     methods: {
         selectPemohon(evt) {
-            this.$axios.$get(`http://localhost:3333/pemohon/${evt}`)
+            this.$axios.$get(`/pemohon/${evt}`)
                 .then(res => {
                     this.pemohon = res.pemohon
                     this.formVisible = true
@@ -189,7 +189,7 @@ export default {
                     fd.append('nama_usaha', this.values.nama_usaha)
                     fd.append('alamat_usaha', this.values.alamat_usaha)
                     fd.append('jenis_usaha', this.values.jenis_usaha)
-                    this.$axios.$post('http://localhost:3333/sku ', fd)
+                    this.$axios.$post('/sku ', fd)
                         .then(() => {
                             const Toast = this.$swal.mixin({
                                 toast: true,

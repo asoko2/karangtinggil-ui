@@ -128,7 +128,7 @@ export default {
         }
     },
     async fetch() {
-        this.$axios.$get('http://localhost:3333/pemohon/all')
+        this.$axios.$get('/pemohon/all')
             .then(res => {
                 this.pemohons = res
             })
@@ -137,7 +137,7 @@ export default {
     },
     methods: {
         selectPemohon(evt) {
-            this.$axios.$get(`http://localhost:3333/pemohon/${evt}`)
+            this.$axios.$get(`/pemohon/${evt}`)
                 .then(res => {
                     this.pemohon = res.pemohon
                     this.formVisible = true
@@ -162,7 +162,7 @@ export default {
                     const fd = new FormData()
                     fd.append('pemohonNik', this.select)
                     fd.append('keperluan', this.values.keperluan)
-                    this.$axios.$post('http://localhost:3333/sktm ', fd)
+                    this.$axios.$post('/sktm ', fd)
                         .then(() => {
                             this.isLoading = false;
                             const Toast = this.$swal.mixin({

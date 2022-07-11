@@ -232,7 +232,7 @@ export default {
         },
         async getDomisiliData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/domisili', {
+            await this.$axios.$get('/domisili', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,

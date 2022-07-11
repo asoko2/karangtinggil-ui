@@ -105,7 +105,7 @@ export default {
     methods: {
         async getDomisiliData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/domisili', {
+            await this.$axios.$get('/domisili', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,
@@ -152,7 +152,7 @@ export default {
                 showLoaderOnConfirm: true,
                 confirmButtonText: 'Yes, delete it!',
                 preConfirm: (hapus) => {
-                    return this.$axios.$delete(`http://localhost:3333/domisili/${domisili.id}`)
+                    return this.$axios.$delete(`/domisili/${domisili.id}`)
                         .then(res => {
                             console.log(res)
                         })

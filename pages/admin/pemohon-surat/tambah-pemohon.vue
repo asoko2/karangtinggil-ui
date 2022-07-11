@@ -240,7 +240,7 @@ export default {
                     fd.append('pekerjaan', this.values.pekerjaan)
                     fd.append('kk', this.values.kk)
 
-                    this.$axios.$post('http://localhost:3333/pemohon ', fd)
+                    this.$axios.$post('/pemohon ', fd)
                         .then(() => {
                             const Toast = this.$swal.mixin({
                                 toast: true,

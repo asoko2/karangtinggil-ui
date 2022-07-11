@@ -232,7 +232,7 @@ export default {
         },
         async getSKCKData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/skck', {
+            await this.$axios.$get('/skck', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,

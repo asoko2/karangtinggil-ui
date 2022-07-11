@@ -59,7 +59,7 @@ export default {
         }
     },
     async fetch() {
-        await this.$axios.$get(`http://localhost:3333/pemohon/${this.$route.params.nik}`)
+        await this.$axios.$get(`/pemohon/${this.$route.params.nik}`)
             .then(res => {
                 this.pemohons = {
                     nik: res.pemohon.nik,

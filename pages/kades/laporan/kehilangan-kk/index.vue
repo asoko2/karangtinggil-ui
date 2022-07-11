@@ -232,7 +232,7 @@ export default {
         },
         async getKehilanganKKData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/kehilangan-kk', {
+            await this.$axios.$get('/kehilangan-kk', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,

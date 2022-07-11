@@ -90,7 +90,6 @@ export default {
     watch: {
         options: {
             handler() {
-                // this.getDataFromApi()
                 this.getPemohonData()
             },
             deep: true,
@@ -104,7 +103,7 @@ export default {
     methods: {
         async getPemohonData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/pemohon', {
+            await this.$axios.$get('/pemohon', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,
@@ -149,7 +148,7 @@ export default {
                 showLoaderOnConfirm: true,
                 confirmButtonText: 'Yes, delete it!',
                 preConfirm: (hapus) => {
-                    return this.$axios.$delete(`http://localhost:3333/pemohon/${pem.nik}`)
+                    return this.$axios.$delete(`/pemohon/${pem.nik}`)
                         .then(res => {
                             console.log(res)
                         })

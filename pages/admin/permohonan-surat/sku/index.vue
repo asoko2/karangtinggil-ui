@@ -101,7 +101,7 @@ export default {
     methods: {
         async getSKUData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/sku', {
+            await this.$axios.$get('/sku', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,
@@ -148,7 +148,7 @@ export default {
                 showLoaderOnConfirm: true,
                 confirmButtonText: 'Yes, delete it!',
                 preConfirm: (hapus) => {
-                    return this.$axios.$delete(`http://localhost:3333/sku/${sku.id}`)
+                    return this.$axios.$delete(`/sku/${sku.id}`)
                         .then(res => {
                             console.log(res)
                         })

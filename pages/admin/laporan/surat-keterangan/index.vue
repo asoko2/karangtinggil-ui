@@ -233,7 +233,7 @@ export default {
         },
         async getSuratKeteranganData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/surat-keterangan', {
+            await this.$axios.$get('/surat-keterangan', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,

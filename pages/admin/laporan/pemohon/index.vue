@@ -229,7 +229,7 @@ export default {
         },
         async getPemohonData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/pemohon', {
+            await this.$axios.$get('/pemohon', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,

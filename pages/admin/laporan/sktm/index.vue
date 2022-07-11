@@ -232,7 +232,7 @@ export default {
         },
         async getSKTMData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/sktm', {
+            await this.$axios.$get('/sktm', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,

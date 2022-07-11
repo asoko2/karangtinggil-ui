@@ -237,7 +237,7 @@ export default {
         },
         async getSKUData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/sku', {
+            await this.$axios.$get('/sku', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,

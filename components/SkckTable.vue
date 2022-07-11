@@ -110,7 +110,7 @@ export default {
     methods: {
         async getSKCKData() {
             this.loading = true
-            await this.$axios.$get('http://localhost:3333/skck', {
+            await this.$axios.$get('/skck', {
                 params: {
                     limit: this.pageSize,
                     page: this.page - 1,
@@ -162,7 +162,7 @@ export default {
                 preConfirm: (hapus) => {
                     const fd = new FormData()
                     fd.append('status', '1')
-                    return this.$axios.$put(`http://localhost:3333/skck/status/${skck.id}`, fd)
+                    return this.$axios.$put(`/skck/status/${skck.id}`, fd)
                         .then(res => {
                             console.log(res)
                         })
@@ -210,7 +210,7 @@ export default {
                 preConfirm: (hapus) => {
                     const fd = new FormData()
                     fd.append('status', '2')
-                    return this.$axios.$put(`http://localhost:3333/skck/status/${skck.id}`, fd)
+                    return this.$axios.$put(`/skck/status/${skck.id}`, fd)
                         .then(res => {
                             console.log(res)
                         })
@@ -245,7 +245,7 @@ export default {
             })
         },
         async cetak(id) {
-            const data = await this.$axios.$get(`http://localhost:3333/skck/${id}`)
+            const data = await this.$axios.$get(`/skck/${id}`)
             const doc = new jsPDF('p', 'mm', [330, 210])
             const tanggal = DateTime.now().toFormat('yyyy-LL-dd')
             doc.addImage("/logo.png", 'PNG', 10, 10, 35, 40)

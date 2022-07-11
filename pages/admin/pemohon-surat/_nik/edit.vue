@@ -185,7 +185,7 @@ export default {
         }
     },
     async fetch() {
-        await this.$axios.$get(`http://localhost:3333/pemohon/${this.$route.params.nik}`)
+        await this.$axios.$get(`/pemohon/${this.$route.params.nik}`)
             .then(res => {
                 this.values = {
                     nik: res.pemohon.nik,
@@ -218,7 +218,7 @@ export default {
                     fd.append('telpon', this.values.telpon)
                     fd.append('pekerjaan', this.values.pekerjaan)
                     fd.append('kk', this.values.kk)
-                    this.$axios.$put(`http://localhost:3333/pemohon/${this.$route.params.nik}`, fd)
+                    this.$axios.$put(`/pemohon/${this.$route.params.nik}`, fd)
                         .then(() => {
                             const Toast = this.$swal.mixin({
                                 toast: true,
